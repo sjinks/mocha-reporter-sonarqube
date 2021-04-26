@@ -94,7 +94,7 @@ class SonarQubeReporter extends mocha.reporters.Base {
     private static _generateTestCaseTag(doc: XMLDocument, test: mocha.Test): HTMLElement {
         const testCase = doc.createElement('testCase');
         testCase.setAttribute('name', test.titlePath().join(' » '));
-        testCase.setAttribute('duration', /* istanbul ignore next */ test.duration ? test.duration.toFixed(3) : '0');
+        testCase.setAttribute('duration', /* istanbul ignore next */ test.duration ? test.duration.toFixed() : '0');
         if (test.state === 'passed') {
             // Do nothing
         } else if (test.state === 'failed') {
