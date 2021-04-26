@@ -1,6 +1,6 @@
 {
   "name": "mocha-reporter-sonarqube",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/lib/index.js",
   "scripts": {
     "build": "tsc",
