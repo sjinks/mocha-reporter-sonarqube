@@ -74,7 +74,8 @@ describe('SonarQubeReporter', function () {
         });
         context = new Mocha.Context();
         suite = new Mocha.Suite('Test Suite', context);
-        runner = new Mocha.Runner(suite, false);
+        // @ts-expect-error @types/mocha has not been updated to match mocha 8.0.0
+        runner = new Mocha.Runner(suite, { delay: false });
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
