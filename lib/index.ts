@@ -1,7 +1,7 @@
 import mocha from 'mocha';
 import { createWriteStream } from 'fs';
 import { Writable } from 'stream';
-import { DOMImplementation, XMLSerializer } from 'xmldom';
+import { DOMImplementation, XMLSerializer } from '@xmldom/xmldom';
 
 interface SonarQubeReporterOptions {
     stream: Writable | undefined;

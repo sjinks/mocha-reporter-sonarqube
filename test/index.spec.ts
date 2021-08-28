@@ -1,6 +1,6 @@
 import Mocha from 'mocha';
 import { expect } from 'chai';
-import { DOMParser } from 'xmldom';
+import { DOMParser } from '@xmldom/xmldom';
 import { WritableBufferStream } from '@myrotvorets/buffer-stream';
 import Reporter from '../lib';
 
