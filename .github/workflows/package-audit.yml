@@ -48,17 +48,7 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
           registry-url: https://npm.pkg.github.com
-
-      - name: Cache node modules
-        uses: actions/cache@v2.1.6
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node_version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node_version }}-
-            ${{ runner.os }}-build-${{ env.cache-name }}-
+          cache: npm
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
