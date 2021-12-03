@@ -14,9 +14,6 @@ jobs:
   audit-npm:
     name: NPM Audit
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node_version: ["14"]
 
     steps:
       - name: Checkout
@@ -25,7 +22,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
         with:
-          node-version: ${{ matrix.node_version }}
+          node-version: lts/*
 
       - name: Run audit
         run: npm audit --production
@@ -33,9 +30,6 @@ jobs:
   audit-retire:
     name: RetireJS Check
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node_version: ["14"]
 
     steps:
       - name: Checkout
@@ -46,17 +40,17 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
         with:
-          node-version: ${{ matrix.node_version }}
+          node-version: lts/*
           registry-url: https://npm.pkg.github.com
           cache: npm
+
+      - name: Update npm and install retire.js
+        run: npm i -g npm retire
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install retire.js
-        run: npm i -g retire
 
       - name: Run audit
         run: retire -n
