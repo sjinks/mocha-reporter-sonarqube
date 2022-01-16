@@ -8,6 +8,8 @@ on:
 
 jobs:
   prepare:
+    permissions:
+      contents: read
     name: Prepare the source code
     runs-on: ubuntu-latest
     steps:
