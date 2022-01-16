@@ -12,6 +12,8 @@ on:
 
 jobs:
   audit-npm:
+    permissions:
+      contents: read
     name: NPM Audit
     runs-on: ubuntu-latest
 
