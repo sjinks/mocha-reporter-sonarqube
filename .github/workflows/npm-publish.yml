@@ -6,10 +6,11 @@ on:
       - released
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   prepare:
-    permissions:
-      contents: read
     name: Prepare the source code
     runs-on: ubuntu-latest
     steps:
