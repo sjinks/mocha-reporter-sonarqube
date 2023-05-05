@@ -28,7 +28,7 @@
     "@myrotvorets/eslint-config-myrotvorets-ts": "^2.5.0",
     "@types/chai": "^4.2.16",
     "@types/mocha": "^10.0.0",
-    "@types/node": "^18.0.0",
+    "@types/node": "^20.0.0",
     "chai": "^4.3.4",
     "mocha": "^10.0.0",
     "mocha-reporter-gha": "^1.0.1",
