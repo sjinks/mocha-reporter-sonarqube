@@ -1,6 +1,7 @@
+/* eslint-disable class-methods-use-this */
+import { createWriteStream } from 'node:fs';
+import { Writable } from 'node:stream';
 import mocha from 'mocha';
-import { createWriteStream } from 'fs';
-import { Writable } from 'stream';
 import { DOMImplementation, XMLSerializer } from '@xmldom/xmldom';
 
 interface SonarQubeReporterOptions {
