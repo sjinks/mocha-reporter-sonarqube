@@ -1,20 +1,24 @@
 {
     "compilerOptions": {
-        "target": "es2019",
-        "module": "CommonJS",
+        "target": "ES2021",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
         "noEmitOnError": true,
         "outDir": "./dist",
         "rootDirs": ["./lib", "./test"],
-        "sourceMap": false,
+        "sourceMap": true,
         "declaration": true,
         "removeComments": false,
         "strict": true,
         "noUnusedLocals": true,
         "noUnusedParameters": false,
         "noFallthroughCasesInSwitch": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noUncheckedIndexedAccess": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
         "esModuleInterop": true,
-        "resolveJsonModule": true,
-        "lib": ["DOM"]
+        "resolveJsonModule": true
     },
     "compileOnSave": true
 }
