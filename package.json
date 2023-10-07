@@ -5,8 +5,8 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint .",
-    "test": "mocha",
-    "test:coverage": "nyc mocha",
+    "test": "mocha test",
+    "test:coverage": "nyc mocha test",
     "prepack": "npm run build"
   },
   "keywords": [
@@ -30,6 +30,7 @@
     "@types/mocha": "^10.0.0",
     "@types/node": "^20.0.0",
     "chai": "^4.3.4",
+    "eslint-plugin-mocha": "^10.2.0",
     "mocha": "^10.0.0",
     "mocha-reporter-gha": "^1.0.1",
     "nyc": "^15.1.0",
