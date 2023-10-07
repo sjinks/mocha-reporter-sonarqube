@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 import { createWriteStream } from 'node:fs';
 import { Writable } from 'node:stream';
-import mocha from 'mocha';
+import { type MochaOptions, type Runner, type Test, reporters } from 'mocha';
 import { DOMImplementation, XMLSerializer } from '@xmldom/xmldom';
 
 interface SonarQubeReporterOptions {
@@ -9,15 +9,15 @@ interface SonarQubeReporterOptions {
     filename: string | undefined;
 }
 
-class SonarQubeReporter extends mocha.reporters.Base {
-    private tests: Record<string, mocha.Test[]> = {};
+class SonarQubeReporter extends reporters.Base {
+    private tests: Record<string, Test[]> = {};
     private readonly options: SonarQubeReporterOptions;
 
-    public constructor(runner: mocha.Runner, options?: mocha.MochaOptions) {
+    public constructor(runner: Runner, options?: MochaOptions) {
         super(runner, options);
 
         // istanbul ignore else
-        if (options && options.reporterOptions && typeof options.reporterOptions === 'object') {
+        if (options?.reporterOptions && typeof options.reporterOptions === 'object') {
             const reporterOptions = options.reporterOptions as SonarQubeReporterOptions;
             this.options = {
                 stream: reporterOptions.stream,
@@ -55,18 +55,18 @@ class SonarQubeReporter extends mocha.reporters.Base {
         this.tests = {};
     };
 
-    private readonly _onTestEnd = (test: mocha.Test): void => {
+    private readonly _onTestEnd = (test: Test): void => {
         const { file } = test;
         if (file !== undefined) {
             if (this.tests[file] === undefined) {
-                this.tests[file] = [];
+                this.tests[file] = [test];
+            } else {
+                (this.tests[file] as Test[]).push(test);
             }
-
-            this.tests[file].push(test);
         }
     };
 
-    private readonly _onFailedTest = (test: mocha.Test, err: Error): void => {
+    private readonly _onFailedTest = (test: Test, err: Error): void => {
         test.err = err;
     };
 
@@ -81,7 +81,7 @@ class SonarQubeReporter extends mocha.reporters.Base {
         doc.appendChild(testExecutions);
 
         Object.keys(this.tests).forEach((fileName) => {
-            const tests = this.tests[fileName];
+            const tests = this.tests[fileName] as Test[];
             const file = doc.createElement('file');
             file.setAttribute('path', fileName);
             testExecutions.appendChild(file);
@@ -92,7 +92,7 @@ class SonarQubeReporter extends mocha.reporters.Base {
         (this.options.stream as Writable).write(serializer.serializeToString(doc));
     };
 
-    private static _generateTestCaseTag(doc: XMLDocument, test: mocha.Test): HTMLElement {
+    private static _generateTestCaseTag(doc: XMLDocument, test: Test): HTMLElement {
         const testCase = doc.createElement('testCase');
         testCase.setAttribute('name', test.titlePath().join(' » '));
         testCase.setAttribute('duration', /* istanbul ignore next */ test.duration ? test.duration.toFixed() : '0');
@@ -100,8 +100,8 @@ class SonarQubeReporter extends mocha.reporters.Base {
             // Do nothing
         } else if (test.state === 'failed') {
             const failure = doc.createElement('failure');
-            failure.setAttribute('message', /* istanbul ignore next */ test.err?.message || '');
-            failure.appendChild(doc.createTextNode(/* istanbul ignore next */ test.err?.stack || ''));
+            failure.setAttribute('message', /* istanbul ignore next */ test.err?.message ?? '');
+            failure.appendChild(doc.createTextNode(/* istanbul ignore next */ test.err?.stack ?? ''));
             testCase.appendChild(failure);
         } /* istanbul ignore else */ else if (test.state === 'pending') {
             const skipped = doc.createElement('skipped');

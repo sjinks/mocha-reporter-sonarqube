@@ -42,8 +42,8 @@ function checkDocumentStructure(doc: XMLDocument): void {
             const children = extractElements(element.childNodes);
             expect(children).to.have.length.at.most(1);
             if (children.length) {
-                const child = children[0];
-                expect(child.tagName).to.match(/^failure|skipped$/u);
+                const child = children[0] as Element;
+                expect(child.tagName).to.match(/^(failure|skipped)$/u);
                 expect(child.attributes.length).to.equal(1);
                 expect(child.getAttribute('message')).to.be.not.empty('string');
 
@@ -121,9 +121,9 @@ describe('SonarQubeReporter', function () {
             }
 
             expect(fileNames).to.deep.equal(['/some/file.js', '/some/otherfile.js', '/yet/another/file.js']);
-            expect(fileNodes[0].getElementsByTagName('testCase')).to.have.length(2);
-            expect(fileNodes[1].getElementsByTagName('testCase')).to.have.length(1);
-            expect(fileNodes[2].getElementsByTagName('testCase')).to.have.length(1);
+            expect((fileNodes[0] as Element).getElementsByTagName('testCase')).to.have.length(2);
+            expect((fileNodes[1] as Element).getElementsByTagName('testCase')).to.have.length(1);
+            expect((fileNodes[2] as Element).getElementsByTagName('testCase')).to.have.length(1);
 
             const testCases = doc.getElementsByTagName('testCase');
             expect(testCases).to.have.length(4);
@@ -140,14 +140,14 @@ describe('SonarQubeReporter', function () {
                 'Test Suite » Pending Test',
             ]);
 
-            expect(testCases[0].getElementsByTagName('*')).to.have.length(0);
-            expect(testCases[1].getElementsByTagName('*')).to.have.length(1);
-            expect(testCases[2].getElementsByTagName('*')).to.have.length(1);
-            expect(testCases[3].getElementsByTagName('*')).to.have.length(1);
+            expect((testCases[0] as Element).getElementsByTagName('*')).to.have.length(0);
+            expect((testCases[1] as Element).getElementsByTagName('*')).to.have.length(1);
+            expect((testCases[2] as Element).getElementsByTagName('*')).to.have.length(1);
+            expect((testCases[3] as Element).getElementsByTagName('*')).to.have.length(1);
 
-            expect(testCases[1].getElementsByTagName('failure')).to.have.length(1);
-            expect(testCases[2].getElementsByTagName('skipped')).to.have.length(1);
-            expect(testCases[3].getElementsByTagName('skipped')).to.have.length(1);
+            expect((testCases[1] as Element).getElementsByTagName('failure')).to.have.length(1);
+            expect((testCases[2] as Element).getElementsByTagName('skipped')).to.have.length(1);
+            expect((testCases[3] as Element).getElementsByTagName('skipped')).to.have.length(1);
 
             done();
         });
