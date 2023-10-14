@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 import { createWriteStream } from 'node:fs';
 import { Writable } from 'node:stream';
 import { type MochaOptions, type Runner, type Test, reporters } from 'mocha';
@@ -61,7 +60,7 @@ class SonarQubeReporter extends reporters.Base {
             if (this.tests[file] === undefined) {
                 this.tests[file] = [test];
             } else {
-                (this.tests[file] as Test[]).push(test);
+                this.tests[file]!.push(test);
             }
         }
     };
@@ -81,7 +80,7 @@ class SonarQubeReporter extends reporters.Base {
         doc.appendChild(testExecutions);
 
         Object.keys(this.tests).forEach((fileName) => {
-            const tests = this.tests[fileName] as Test[];
+            const tests = this.tests[fileName]!;
             const file = doc.createElement('file');
             file.setAttribute('path', fileName);
             testExecutions.appendChild(file);
@@ -89,7 +88,7 @@ class SonarQubeReporter extends reporters.Base {
         });
 
         const serializer = new XMLSerializer();
-        (this.options.stream as Writable).write(serializer.serializeToString(doc));
+        this.options.stream!.write(serializer.serializeToString(doc));
     };
 
     private static _generateTestCaseTag(doc: XMLDocument, test: Test): HTMLElement {
