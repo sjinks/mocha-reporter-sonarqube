@@ -1,5 +1,5 @@
+import { deepEqual, equal, match } from 'node:assert/strict';
 import Mocha from 'mocha';
-import { expect } from 'chai';
 import { DOMParser } from '@xmldom/xmldom';
 import { WritableBufferStream } from '@myrotvorets/buffer-stream';
 import Reporter from '../lib';
@@ -21,36 +21,45 @@ function extractElements(list: NodeList): Element[] {
 }
 
 function checkDocumentStructure(doc: XMLDocument): void {
-    expect(doc.documentElement.tagName).to.equal('testExecutions');
-    expect(doc.documentElement.attributes.length).to.equal(1);
-    expect(doc.documentElement.getAttribute('version')).to.equal('1');
+    equal(doc.documentElement.tagName, 'testExecutions');
+    equal(doc.documentElement.attributes.length, 1);
+    equal(doc.documentElement.getAttribute('version'), '1');
 
     const files = extractElements(doc.documentElement.childNodes);
     files.forEach((element) => {
-        expect(element.tagName).to.equal('file');
-        expect(element.attributes.length).to.equal(1);
-        expect(element.getAttribute('path')).to.be.not.empty('string');
-        expect(element.childNodes.length).to.be.greaterThan(0);
+        equal(element.tagName, 'file');
+        equal(element.attributes.length, 1);
+        const path = element.getAttribute('path');
+        equal(typeof path, 'string');
+        equal(path!.length > 0, true);
+        equal(element.childNodes.length > 0, true);
 
         const testCases = extractElements(element.childNodes);
         testCases.forEach((element) => {
-            expect(element.tagName).to.equal('testCase');
-            expect(element.attributes.length).to.equal(2);
-            expect(element.getAttribute('name')).to.be.not.empty('string');
-            expect(element.getAttribute('duration')).to.be.not.empty('string');
+            equal(element.tagName, 'testCase');
+            equal(element.attributes.length, 2);
+            const name = element.getAttribute('name');
+            const duration = element.getAttribute('duration');
+
+            equal(typeof name, 'string');
+            equal(typeof duration, 'string');
+            equal(name!.length > 0, true);
+            equal(duration!.length > 0, true);
 
             const children = extractElements(element.childNodes);
-            expect(children).to.have.length.at.most(1);
+            equal(children.length <= 1, true);
             if (children.length) {
                 const child = children[0]!;
-                expect(child.tagName).to.match(/^(failure|skipped)$/u);
-                expect(child.attributes.length).to.equal(1);
-                expect(child.getAttribute('message')).to.be.not.empty('string');
+                match(child.tagName, /^(failure|skipped)$/u);
+                equal(child.attributes.length, 1);
+                const message = child.getAttribute('message');
+                equal(typeof message, 'string');
+                equal(message!.length > 0, true);
 
                 if (child.tagName === 'failure') {
-                    expect(child.childNodes.length).to.be.greaterThan(0);
+                    equal(child.childNodes.length > 0, true);
                 } else {
-                    expect(child.childNodes.length).to.equal(0);
+                    equal(child.childNodes.length, 0);
                 }
             }
         });
@@ -107,7 +116,7 @@ describe('SonarQubeReporter', function () {
         suite.addTest(pendingTest);
 
         runner.run(function (failureCount) {
-            expect(failureCount).to.equal(1);
+            equal(failureCount, 1);
 
             const parser = new DOMParser();
             const xml = stream.toString();
@@ -120,34 +129,34 @@ describe('SonarQubeReporter', function () {
                 fileNames.push(fileNodes.item(i)!.getAttribute('path')!);
             }
 
-            expect(fileNames).to.deep.equal(['/some/file.js', '/some/otherfile.js', '/yet/another/file.js']);
-            expect(fileNodes[0]!.getElementsByTagName('testCase')).to.have.length(2);
-            expect(fileNodes[1]!.getElementsByTagName('testCase')).to.have.length(1);
-            expect(fileNodes[2]!.getElementsByTagName('testCase')).to.have.length(1);
+            deepEqual(fileNames, ['/some/file.js', '/some/otherfile.js', '/yet/another/file.js']);
+            equal(fileNodes[0]!.getElementsByTagName('testCase').length, 2);
+            equal(fileNodes[1]!.getElementsByTagName('testCase').length, 1);
+            equal(fileNodes[2]!.getElementsByTagName('testCase').length, 1);
 
             const testCases = doc.getElementsByTagName('testCase');
-            expect(testCases).to.have.length(4);
+            equal(testCases.length, 4);
 
             const testNames: string[] = [];
             for (let i = 0; i < testCases.length; ++i) {
                 testNames.push(testCases.item(i)!.getAttribute('name')!);
             }
 
-            expect(testNames).to.deep.equal([
+            deepEqual(testNames, [
                 'Test Suite » Successful Test',
                 'Test Suite » Failed Test',
                 'Test Suite » Skipped Test',
                 'Test Suite » Pending Test',
             ]);
 
-            expect(testCases[0]!.getElementsByTagName('*')).to.have.length(0);
-            expect(testCases[1]!.getElementsByTagName('*')).to.have.length(1);
-            expect(testCases[2]!.getElementsByTagName('*')).to.have.length(1);
-            expect(testCases[3]!.getElementsByTagName('*')).to.have.length(1);
+            equal(testCases[0]!.getElementsByTagName('*').length, 0);
+            equal(testCases[1]!.getElementsByTagName('*').length, 1);
+            equal(testCases[2]!.getElementsByTagName('*').length, 1);
+            equal(testCases[3]!.getElementsByTagName('*').length, 1);
 
-            expect(testCases[1]!.getElementsByTagName('failure')).to.have.length(1);
-            expect(testCases[2]!.getElementsByTagName('skipped')).to.have.length(1);
-            expect(testCases[3]!.getElementsByTagName('skipped')).to.have.length(1);
+            equal(testCases[1]!.getElementsByTagName('failure').length, 1);
+            equal(testCases[2]!.getElementsByTagName('skipped').length, 1);
+            equal(testCases[3]!.getElementsByTagName('skipped').length, 1);
 
             done();
         });
@@ -158,14 +167,14 @@ describe('SonarQubeReporter', function () {
         suite.addTest(test);
 
         runner.run(function (failureCount) {
-            expect(failureCount).to.equal(0);
+            equal(failureCount, 0);
 
             const parser = new DOMParser();
             const xml = stream.toString();
             const doc = parser.parseFromString(xml);
             checkDocumentStructure(doc);
 
-            expect(doc.getElementsByTagName('file')).to.have.length(0);
+            equal(doc.getElementsByTagName('file').length, 0);
             done();
         });
     });
