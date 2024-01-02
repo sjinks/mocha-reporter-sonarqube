@@ -1,4 +1,5 @@
-import { createWriteStream } from 'node:fs';
+import { createWriteStream, mkdirSync, statSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { Writable } from 'node:stream';
 import { type MochaOptions, type Runner, type Test, reporters } from 'mocha';
 import { DOMImplementation, XMLSerializer } from '@xmldom/xmldom';
@@ -18,7 +19,7 @@ class SonarQubeReporter extends reporters.Base {
             if (!(stream instanceof Writable)) {
                 this.stream =
                     filename && typeof filename === 'string'
-                        ? createWriteStream(filename, { encoding: 'utf-8', mode: 0o644 })
+                        ? SonarQubeReporter.createWriteStream(filename)
                         : process.stdout;
             } else {
                 this.stream = stream;
@@ -36,6 +37,7 @@ class SonarQubeReporter extends reporters.Base {
     // eslint-disable-next-line @typescript-eslint/class-methods-use-this
     private readonly _onStreamError = (e: Error): void => {
         console.error(e);
+        throw e;
     };
 
     private readonly _onStart = (): void => {
@@ -95,6 +97,18 @@ class SonarQubeReporter extends reporters.Base {
         }
 
         return testCase;
+    }
+
+    private static createWriteStream(filename: string): Writable {
+        const dir = dirname(filename);
+        const stats = statSync(dir, { throwIfNoEntry: false });
+        if (stats === undefined) {
+            mkdirSync(dir, { recursive: true, mode: 0o755 });
+        } else if (!stats.isDirectory()) {
+            throw new Error(`"${dir}" is not a directory`);
+        }
+
+        return createWriteStream(filename, { encoding: 'utf-8', mode: 0o644 });
     }
 }
 
