@@ -2,7 +2,7 @@
 
 Mocha reporter for SonarQube / SonarCloud
 
-See https://docs.sonarqube.org/latest/analysis/generic-test/#header-2 for details.
+See https://docs.sonarsource.com/sonarqube/latest/analyzing-source-code/test-coverage/generic-test-data/#generic-test-execution for details.
 
 ## Installation
 
@@ -16,4 +16,4 @@ npm i -D mocha-reporter-sonarqube
 mocha -R mocha-reporter-sonarqube -O filename=report.xml
 ```
 
-if `filename` option is not specified, the report will be written to `process.stdout`.
+if the `filename` option is not specified, the report will be written to `process.stdout`.
