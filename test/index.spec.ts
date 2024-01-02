@@ -1,4 +1,6 @@
-import { deepEqual, equal, match } from 'node:assert/strict';
+import { deepEqual, equal, match, throws } from 'node:assert/strict';
+import fs from 'node:fs';
+import { mock } from 'node:test';
 import Mocha from 'mocha';
 import { DOMParser } from '@xmldom/xmldom';
 import { WritableBufferStream } from '@myrotvorets/buffer-stream';
@@ -175,6 +177,77 @@ describe('SonarQubeReporter', function () {
 
             equal(doc.getElementsByTagName('file').length, 0);
             done();
+        });
+    });
+
+    describe('report handling', function () {
+        afterEach(function () {
+            mock.restoreAll();
+        });
+
+        it('should create parent directories for report', function () {
+            const statSyncMock = mock.method(fs, 'statSync', () => undefined);
+            const mkdirSyncMock = mock.method(fs, 'mkdirSync', () => undefined);
+            const createWriteStreamMock = mock.method(fs, 'createWriteStream', () => new WritableBufferStream());
+
+            const dirname = 'some/path/to';
+            const filename = `${dirname}/report.xml`;
+
+            new Reporter(/* NOSONAR */ runner, {
+                reporterOptions: {
+                    filename,
+                },
+            });
+
+            equal(statSyncMock.mock.calls.length, 1);
+            equal(statSyncMock.mock.calls[0]?.arguments[0], dirname);
+            equal(mkdirSyncMock.mock.calls.length, 1);
+            equal(mkdirSyncMock.mock.calls[0]?.arguments[0], dirname);
+            equal(createWriteStreamMock.mock.calls.length, 1);
+            equal(createWriteStreamMock.mock.calls[0]?.arguments[0], filename);
+        });
+
+        it('does not call mkdir if parent directory exists', function () {
+            const statSyncMock = mock.method(fs, 'statSync', () => ({ isDirectory: (): boolean => true }));
+            const mkdirSyncMock = mock.method(fs, 'mkdirSync', () => undefined);
+            const createWriteStreamMock = mock.method(fs, 'createWriteStream', () => new WritableBufferStream());
+
+            const dirname = 'some/path/to';
+            const filename = `${dirname}/report.xml`;
+
+            new Reporter(/* NOSONAR */ runner, {
+                reporterOptions: {
+                    filename,
+                },
+            });
+
+            equal(statSyncMock.mock.calls.length, 1);
+            equal(statSyncMock.mock.calls[0]?.arguments[0], dirname);
+            equal(mkdirSyncMock.mock.calls.length, 0);
+            equal(createWriteStreamMock.mock.calls.length, 1);
+            equal(createWriteStreamMock.mock.calls[0]?.arguments[0], filename);
+        });
+
+        it('should throw if parent directory is not a directory', function () {
+            const statSyncMock = mock.method(fs, 'statSync', () => ({ isDirectory: (): boolean => false }));
+            const mkdirSyncMock = mock.method(fs, 'mkdirSync', () => undefined);
+            const createWriteStreamMock = mock.method(fs, 'createWriteStream', () => new WritableBufferStream());
+
+            const dirname = 'some/path/to';
+            const filename = `${dirname}/report.xml`;
+
+            throws(() => {
+                new Reporter(/* NOSONAR */ runner, {
+                    reporterOptions: {
+                        filename,
+                    },
+                });
+            }, /^Error: ".+" is not a directory$/u);
+
+            equal(statSyncMock.mock.calls.length, 1);
+            equal(statSyncMock.mock.calls[0]?.arguments[0], dirname);
+            equal(mkdirSyncMock.mock.calls.length, 0);
+            equal(createWriteStreamMock.mock.calls.length, 0);
         });
     });
 });
