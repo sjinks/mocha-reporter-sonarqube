@@ -85,8 +85,7 @@ describe('SonarQubeReporter', function () {
         suite = new Mocha.Suite('Test Suite', context);
         runner = new Mocha.Runner(suite, { delay: false });
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
+        // @ts-expect-error -- `mocha._reporter` is marked as `private`
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         new mocha._reporter(runner, {
             reporterOptions: {

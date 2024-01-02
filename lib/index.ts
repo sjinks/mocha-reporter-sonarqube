@@ -3,38 +3,25 @@ import { Writable } from 'node:stream';
 import { type MochaOptions, type Runner, type Test, reporters } from 'mocha';
 import { DOMImplementation, XMLSerializer } from '@xmldom/xmldom';
 
-interface SonarQubeReporterOptions {
-    stream: Writable | undefined;
-    filename: string | undefined;
-}
-
 class SonarQubeReporter extends reporters.Base {
     private tests: Record<string, Test[]> = {};
-    private readonly options: SonarQubeReporterOptions;
+    private readonly stream: Writable = process.stdout;
 
     public constructor(runner: Runner, options?: MochaOptions) {
         super(runner, options);
 
+        const reporterOptions: unknown = options?.reporterOptions;
         // istanbul ignore else
-        if (options?.reporterOptions && typeof options.reporterOptions === 'object') {
-            const reporterOptions = options.reporterOptions as SonarQubeReporterOptions;
-            this.options = {
-                stream: reporterOptions.stream,
-                filename: reporterOptions.filename,
-            };
-        } else {
-            this.options = {
-                stream: undefined,
-                filename: undefined,
-            };
-        }
-
-        // istanbul ignore if
-        if (!this.options.stream || !(this.options.stream instanceof Writable)) {
-            if (this.options.filename) {
-                this.options.stream = createWriteStream(this.options.filename, { encoding: 'utf-8', mode: 0o644 });
+        if (reporterOptions && typeof reporterOptions === 'object') {
+            const { stream, filename } = reporterOptions as Record<string, unknown>;
+            // istanbul ignore if
+            if (!(stream instanceof Writable)) {
+                this.stream =
+                    filename && typeof filename === 'string'
+                        ? createWriteStream(filename, { encoding: 'utf-8', mode: 0o644 })
+                        : process.stdout;
             } else {
-                this.options.stream = process.stdout;
+                this.stream = stream;
             }
         }
 
@@ -42,10 +29,11 @@ class SonarQubeReporter extends reporters.Base {
         runner.on('test end', this._onTestEnd);
         runner.on('fail', this._onFailedTest);
         runner.on('end', this._onEnd);
-        this.options.stream.on('error', this._onStreamError);
+        this.stream.on('error', this._onStreamError);
     }
 
     // istanbul ignore next
+    // eslint-disable-next-line @typescript-eslint/class-methods-use-this
     private readonly _onStreamError = (e: Error): void => {
         console.error(e);
     };
@@ -57,14 +45,12 @@ class SonarQubeReporter extends reporters.Base {
     private readonly _onTestEnd = (test: Test): void => {
         const { file } = test;
         if (file !== undefined) {
-            if (this.tests[file] === undefined) {
-                this.tests[file] = [test];
-            } else {
-                this.tests[file]!.push(test);
-            }
+            this.tests[file] = this.tests[file] ?? [];
+            this.tests[file]!.push(test);
         }
     };
 
+    // eslint-disable-next-line @typescript-eslint/class-methods-use-this
     private readonly _onFailedTest = (test: Test, err: Error): void => {
         test.err = err;
     };
@@ -88,7 +74,7 @@ class SonarQubeReporter extends reporters.Base {
         });
 
         const serializer = new XMLSerializer();
-        this.options.stream!.write(serializer.serializeToString(doc));
+        this.stream.write(serializer.serializeToString(doc));
     };
 
     private static _generateTestCaseTag(doc: XMLDocument, test: Test): HTMLElement {
@@ -102,7 +88,7 @@ class SonarQubeReporter extends reporters.Base {
             failure.setAttribute('message', /* istanbul ignore next */ test.err?.message ?? '');
             failure.appendChild(doc.createTextNode(/* istanbul ignore next */ test.err?.stack ?? ''));
             testCase.appendChild(failure);
-        } /* istanbul ignore else */ else if (test.state === 'pending') {
+        } else if (test.state === 'pending') {
             const skipped = doc.createElement('skipped');
             skipped.setAttribute('message', 'Pending test');
             testCase.appendChild(skipped);
