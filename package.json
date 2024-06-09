@@ -32,7 +32,7 @@
     "eslint-plugin-mocha": "^10.2.0",
     "mocha": "^10.2.0",
     "mocha-reporter-gha": "^1.1.1",
-    "nyc": "^15.1.0",
+    "nyc": "^17.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   },
