@@ -48,7 +48,7 @@ class SonarQubeReporter extends reporters.Base {
         const { file } = test;
         if (file !== undefined) {
             this.tests[file] = this.tests[file] ?? [];
-            this.tests[file]!.push(test);
+            this.tests[file].push(test);
         }
     };
 
