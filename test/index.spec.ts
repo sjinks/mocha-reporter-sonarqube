@@ -1,3 +1,5 @@
+/* eslint-disable sonarjs/no-nested-functions */
+/* eslint-disable sonarjs/constructor-for-side-effects */
 import { deepEqual, equal, match, throws } from 'node:assert/strict';
 import fs from 'node:fs';
 import { mock } from 'node:test';
