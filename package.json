@@ -37,7 +37,7 @@
     "typescript": "^5.5.3"
   },
   "dependencies": {
-    "@xmldom/xmldom": "^0.8.0"
+    "@xmldom/xmldom": "^0.9.0"
   },
   "repository": {
     "type": "git",
