@@ -71,7 +71,6 @@ function checkDocumentStructure(doc: XMLDocument): void {
 }
 
 describe('SonarQubeReporter', function () {
-    let mocha: Mocha;
     let context: Mocha.Context;
     let suite: Mocha.Suite;
     let runner: Mocha.Runner;
@@ -79,19 +78,10 @@ describe('SonarQubeReporter', function () {
 
     beforeEach(function () {
         stream = new WritableBufferStream();
-        mocha = new Mocha({
-            reporter: Reporter,
-            reporterOptions: {
-                stream,
-            },
-        });
         context = new Mocha.Context();
         suite = new Mocha.Suite('Test Suite', context);
         runner = new Mocha.Runner(suite, { delay: false });
-
-        // @ts-expect-error -- `mocha._reporter` is marked as `private`
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        new mocha._reporter(runner, {
+        new Reporter(/* NOSONAR */ runner, {
             reporterOptions: {
                 stream,
             },

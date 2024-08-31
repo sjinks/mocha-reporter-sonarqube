@@ -1,7 +1,7 @@
 import { createWriteStream, mkdirSync, statSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { Writable } from 'node:stream';
-import { type MochaOptions, type Runner, type Test, reporters } from 'mocha';
+import { type MochaOptions, Runner, type Test, reporters } from 'mocha';
 import { DOMImplementation, XMLSerializer } from '@xmldom/xmldom';
 
 class SonarQubeReporter extends reporters.Base {
@@ -26,10 +26,9 @@ class SonarQubeReporter extends reporters.Base {
             }
         }
 
-        runner.on('start', this._onStart);
-        runner.on('test end', this._onTestEnd);
-        runner.on('fail', this._onFailedTest);
-        runner.on('end', this._onEnd);
+        runner.on(Runner.constants.EVENT_RUN_BEGIN, this._onStart);
+        runner.on(Runner.constants.EVENT_TEST_END, this._onTestEnd);
+        runner.on(Runner.constants.EVENT_RUN_END, this._onEnd);
         this.stream.on('error', this._onStreamError);
     }
 
@@ -50,11 +49,6 @@ class SonarQubeReporter extends reporters.Base {
             this.tests[file] = this.tests[file] ?? [];
             this.tests[file].push(test);
         }
-    };
-
-    // eslint-disable-next-line @typescript-eslint/class-methods-use-this
-    private readonly _onFailedTest = (test: Test, err: Error): void => {
-        test.err = err;
     };
 
     private readonly _onEnd = (): void => {
@@ -83,17 +77,10 @@ class SonarQubeReporter extends reporters.Base {
         const testCase = doc.createElement('testCase');
         testCase.setAttribute('name', test.titlePath().join(' » '));
         testCase.setAttribute('duration', /* istanbul ignore next */ test.duration ? test.duration.toFixed() : '0');
-        if (test.state === 'passed') {
-            // Do nothing
-        } else if (test.state === 'failed') {
-            const failure = doc.createElement('failure');
-            failure.setAttribute('message', /* istanbul ignore next */ test.err?.message ?? '');
-            failure.appendChild(doc.createTextNode(/* istanbul ignore next */ test.err?.stack ?? ''));
-            testCase.appendChild(failure);
+        if (test.state === 'failed') {
+            testCase.appendChild(doc.createElement('failure'));
         } else if (test.state === 'pending') {
-            const skipped = doc.createElement('skipped');
-            skipped.setAttribute('message', 'Pending test');
-            testCase.appendChild(skipped);
+            testCase.appendChild(doc.createElement('skipped'));
         }
 
         return testCase;
