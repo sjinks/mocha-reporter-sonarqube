@@ -3,16 +3,22 @@ name: Build and Test
 on:
   push:
     branches:
-      - '**'
+      - master
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+env:
+  NPM_CONFIG_FUND: '0'
+  NPM_CONFIG_AUDIT: '0'
+  SUPPRESS_SUPPORT: '1'
+  NO_UPDATE_NOTIFIER: 'true'
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.head_commit.message, '[ci skip]') || github.event_name == 'workflow_dispatch' }}
     strategy:
       matrix:
         node:
@@ -23,7 +29,20 @@ jobs:
           - name: Current
             version: node
     name: 'Build and test (Node: ${{ matrix.node.name }})'
+    permissions:
+      contents: read
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          disable-sudo: true
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
+            nodejs.org:443
+            registry.npmjs.org:443
+
       - name: Check out the code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
@@ -40,9 +59,6 @@ jobs:
 
       - name: Run postinstall scripts
         run: npm rebuild && npm run prepare --if-present
-
-      - name: Run lint
-        run: npm run lint
 
       - name: Run tests
         run: npm run test:coverage
