@@ -2,7 +2,7 @@ import { createWriteStream, mkdirSync, statSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { Writable } from 'node:stream';
 import { type MochaOptions, Runner, type Test, reporters } from 'mocha';
-import { DOMImplementation, XMLSerializer } from '@xmldom/xmldom';
+import { tag } from './utils';
 
 class SonarQubeReporter extends reporters.Base {
     private tests: Record<string, Test[]> = {};
@@ -52,38 +52,35 @@ class SonarQubeReporter extends reporters.Base {
     };
 
     private readonly _onEnd = (): void => {
-        const dom = new DOMImplementation();
-        const doc = dom.createDocument(null, null);
-        const xmlPI = doc.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"');
-        const testExecutions = doc.createElement('testExecutions');
-        testExecutions.setAttribute('version', '1');
-        doc.appendChild(xmlPI);
-        doc.appendChild(doc.createTextNode('\n'));
-        doc.appendChild(testExecutions);
+        let output = '<?xml version="1.0" encoding="UTF-8"?>\n<testExecutions version="1">';
 
         Object.keys(this.tests).forEach((fileName) => {
             const tests = this.tests[fileName]!;
-            const file = doc.createElement('file');
-            file.setAttribute('path', fileName);
-            testExecutions.appendChild(file);
-            tests.forEach((test) => file.appendChild(SonarQubeReporter._generateTestCaseTag(doc, test)));
+            output += tag('file', { path: fileName }, false);
+            tests.forEach((test) => {
+                output += SonarQubeReporter._generateTestCaseTag(test);
+            });
+            output += '</file>';
         });
 
-        const serializer = new XMLSerializer();
-        this.stream.write(serializer.serializeToString(doc));
+        output += '</testExecutions>';
+        this.stream.write(output);
     };
 
-    private static _generateTestCaseTag(doc: XMLDocument, test: Test): HTMLElement {
-        const testCase = doc.createElement('testCase');
-        testCase.setAttribute('name', test.titlePath().join(' » '));
-        testCase.setAttribute('duration', /* istanbul ignore next */ test.duration ? test.duration.toFixed() : '0');
+    private static _generateTestCaseTag(test: Test): string {
+        let inner: string | undefined;
         if (test.state === 'failed') {
-            testCase.appendChild(doc.createElement('failure'));
+            inner = tag('failure');
         } else if (test.state === 'pending') {
-            testCase.appendChild(doc.createElement('skipped'));
+            inner = tag('skipped');
         }
 
-        return testCase;
+        const attrs = {
+            name: test.titlePath().join(' » '),
+            duration: test.duration ? test.duration.toFixed() : '0',
+        };
+
+        return tag('testCase', attrs, !inner, inner);
     }
 
     private static createWriteStream(filename: string): Writable {
