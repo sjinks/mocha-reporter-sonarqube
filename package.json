@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "test": "mocha test",
     "test:coverage": "nyc mocha test",
     "prepack": "npm run build"
