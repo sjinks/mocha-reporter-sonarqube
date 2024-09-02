@@ -18,9 +18,9 @@
     "sonarqube-reports"
   ],
   "files": [
-    "dist/lib/index.js",
-    "dist/lib/index.d.ts",
-    "dist/lib/index.js.map"
+    "dist/lib/*.js",
+    "dist/lib/*.d.ts",
+    "dist/lib/*.js.map"
   ],
   "typings": "dist/lib/index.d.ts",
   "author": "Volodymyr Kolesnykov <volodymyr@wildwolf.name> (https://wildwolf.name/)",
