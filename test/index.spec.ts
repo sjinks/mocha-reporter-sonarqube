@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-nested-functions */
 /* eslint-disable sonarjs/constructor-for-side-effects */
-import { deepEqual, equal, match, throws } from 'node:assert/strict';
+import assert, { deepEqual, equal, match, throws } from 'node:assert/strict';
 import fs from 'node:fs';
 import { mock } from 'node:test';
 import Mocha from 'mocha';
@@ -20,43 +20,38 @@ function extractElements(list: NodeList): Element[] {
     return result;
 }
 
-declare module '@xmldom/xmldom' {
-    interface Document {
-        documentElement: Element;
-    }
-}
-
 function checkDocumentStructure(doc: Document): void {
-    equal(doc.documentElement.localName, 'testExecutions');
+    assert(doc.documentElement !== null);
+    equal(doc.documentElement.tagName, 'testExecutions');
     equal(doc.documentElement.attributes.length, 1);
     equal(doc.documentElement.getAttribute('version'), '1');
 
     const files = extractElements(doc.documentElement.childNodes);
     files.forEach((element) => {
-        equal(element.localName, 'file');
+        equal(element.tagName, 'file');
         equal(element.attributes.length, 1);
         const path = element.getAttribute('path');
-        equal(typeof path, 'string');
-        equal(path!.length > 0, true);
+        assert(typeof path === 'string');
+        equal(path.length > 0, true);
         equal(element.childNodes.length > 0, true);
 
         const testCases = extractElements(element.childNodes);
         testCases.forEach((element) => {
-            equal(element.localName, 'testCase');
+            equal(element.tagName, 'testCase');
             equal(element.attributes.length, 2);
             const name = element.getAttribute('name');
             const duration = element.getAttribute('duration');
 
-            equal(typeof name, 'string');
-            equal(typeof duration, 'string');
-            equal(name!.length > 0, true);
-            equal(duration!.length > 0, true);
+            assert(typeof name === 'string');
+            assert(typeof duration === 'string');
+            equal(name.length > 0, true);
+            equal(duration.length > 0, true);
 
             const children = extractElements(element.childNodes);
             equal(children.length <= 1, true);
             if (children.length) {
                 const child = children[0]!;
-                match(child.localName!, /^(failure|skipped)$/u);
+                match(child.tagName, /^(failure|skipped)$/u);
                 equal(child.attributes.length, 0);
             }
         });
@@ -111,21 +106,30 @@ describe('SonarQubeReporter', function () {
 
             const fileNodes = doc.getElementsByTagName('file');
             const fileNames: string[] = [];
-            for (let i = 0; i < fileNodes.length; ++i) {
-                fileNames.push((fileNodes.item(i) as Element).getAttribute('path') ?? '');
+            for (const node of fileNodes) {
+                assert(node instanceof Element);
+                const path = node.getAttribute('path');
+                assert(typeof path === 'string');
+                fileNames.push(path);
             }
 
             deepEqual(fileNames, ['/some/file.js', '/some/otherfile.js', '/yet/another/file.js']);
-            equal((fileNodes[0] as Element).getElementsByTagName('testCase').length, 2);
-            equal((fileNodes[1] as Element).getElementsByTagName('testCase').length, 1);
-            equal((fileNodes[2] as Element).getElementsByTagName('testCase').length, 1);
+            assert(fileNodes[0] instanceof Element);
+            assert(fileNodes[1] instanceof Element);
+            assert(fileNodes[2] instanceof Element);
+            equal(fileNodes[0].getElementsByTagName('testCase').length, 2);
+            equal(fileNodes[1].getElementsByTagName('testCase').length, 1);
+            equal(fileNodes[2].getElementsByTagName('testCase').length, 1);
 
             const testCases = doc.getElementsByTagName('testCase');
             equal(testCases.length, 4);
 
             const testNames: string[] = [];
-            for (let i = 0; i < testCases.length; ++i) {
-                testNames.push((testCases.item(i) as Element).getAttribute('name') ?? '');
+            for (const testCase of testCases) {
+                assert(testCase instanceof Element);
+                const name = testCase.getAttribute('name');
+                assert(typeof name === 'string');
+                testNames.push(name);
             }
 
             deepEqual(testNames, [
@@ -135,14 +139,19 @@ describe('SonarQubeReporter', function () {
                 'Test Suite » Pending Test',
             ]);
 
-            equal((testCases[0] as Element).getElementsByTagName('*').length, 0);
-            equal((testCases[1] as Element).getElementsByTagName('*').length, 1);
-            equal((testCases[2] as Element).getElementsByTagName('*').length, 1);
-            equal((testCases[3] as Element).getElementsByTagName('*').length, 1);
+            assert(testCases[0] instanceof Element);
+            assert(testCases[1] instanceof Element);
+            assert(testCases[2] instanceof Element);
+            assert(testCases[3] instanceof Element);
 
-            equal((testCases[1] as Element).getElementsByTagName('failure').length, 1);
-            equal((testCases[2] as Element).getElementsByTagName('skipped').length, 1);
-            equal((testCases[3] as Element).getElementsByTagName('skipped').length, 1);
+            equal(testCases[0].getElementsByTagName('*').length, 0);
+            equal(testCases[1].getElementsByTagName('*').length, 1);
+            equal(testCases[2].getElementsByTagName('*').length, 1);
+            equal(testCases[3].getElementsByTagName('*').length, 1);
+
+            equal(testCases[1].getElementsByTagName('failure').length, 1);
+            equal(testCases[2].getElementsByTagName('skipped').length, 1);
+            equal(testCases[3].getElementsByTagName('skipped').length, 1);
 
             done();
         });
@@ -185,11 +194,14 @@ describe('SonarQubeReporter', function () {
             });
 
             equal(statSyncMock.mock.calls.length, 1);
-            equal(statSyncMock.mock.calls[0]?.arguments[0], dirname);
+            assert(typeof statSyncMock.mock.calls[0] !== 'undefined');
+            equal(statSyncMock.mock.calls[0].arguments[0], dirname);
             equal(mkdirSyncMock.mock.calls.length, 1);
-            equal(mkdirSyncMock.mock.calls[0]?.arguments[0], dirname);
+            assert(typeof mkdirSyncMock.mock.calls[0] !== 'undefined');
+            equal(mkdirSyncMock.mock.calls[0].arguments[0], dirname);
             equal(createWriteStreamMock.mock.calls.length, 1);
-            equal(createWriteStreamMock.mock.calls[0]?.arguments[0], filename);
+            assert(typeof createWriteStreamMock.mock.calls[0] !== 'undefined');
+            equal(createWriteStreamMock.mock.calls[0].arguments[0], filename);
         });
 
         it('does not call mkdir if parent directory exists', function () {
@@ -207,10 +219,12 @@ describe('SonarQubeReporter', function () {
             });
 
             equal(statSyncMock.mock.calls.length, 1);
-            equal(statSyncMock.mock.calls[0]?.arguments[0], dirname);
+            assert(typeof statSyncMock.mock.calls[0] !== 'undefined');
+            equal(statSyncMock.mock.calls[0].arguments[0], dirname);
             equal(mkdirSyncMock.mock.calls.length, 0);
             equal(createWriteStreamMock.mock.calls.length, 1);
-            equal(createWriteStreamMock.mock.calls[0]?.arguments[0], filename);
+            assert(typeof createWriteStreamMock.mock.calls[0] !== 'undefined');
+            equal(createWriteStreamMock.mock.calls[0].arguments[0], filename);
         });
 
         it('should throw if parent directory is not a directory', function () {
@@ -230,7 +244,8 @@ describe('SonarQubeReporter', function () {
             }, /^Error: ".+" is not a directory$/u);
 
             equal(statSyncMock.mock.calls.length, 1);
-            equal(statSyncMock.mock.calls[0]?.arguments[0], dirname);
+            assert(typeof statSyncMock.mock.calls[0] !== 'undefined');
+            equal(statSyncMock.mock.calls[0].arguments[0], dirname);
             equal(mkdirSyncMock.mock.calls.length, 0);
             equal(createWriteStreamMock.mock.calls.length, 0);
         });
