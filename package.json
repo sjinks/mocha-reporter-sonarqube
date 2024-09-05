@@ -30,7 +30,7 @@
     "@myrotvorets/eslint-config-myrotvorets-ts": "^2.26.0",
     "@types/mocha": "^10.0.7",
     "@types/node": "^22.0.0",
-    "@xmldom/xmldom": "^0.8.10",
+    "@xmldom/xmldom": "^0.9.0",
     "eslint-plugin-mocha": "^10.4.3",
     "mocha": "^10.6.0",
     "mocha-reporter-gha": "^1.1.1",
