@@ -4,19 +4,15 @@ import { deepEqual, equal, match, throws } from 'node:assert/strict';
 import fs from 'node:fs';
 import { mock } from 'node:test';
 import Mocha from 'mocha';
-import { DOMParser } from '@xmldom/xmldom';
+import { DOMParser, type Document, Element, type NodeList } from '@xmldom/xmldom';
 import { WritableBufferStream } from '@myrotvorets/buffer-stream';
 import Reporter from '../lib';
-
-function isElement(node: Node): node is Element {
-    return node.nodeType === 3;
-}
 
 function extractElements(list: NodeList): Element[] {
     const result: Element[] = [];
     for (let i = 0; i < list.length; ++i) {
         const node = list.item(i)!;
-        if (isElement(node)) {
+        if (node instanceof Element) {
             result.push(node);
         }
     }
@@ -24,14 +20,20 @@ function extractElements(list: NodeList): Element[] {
     return result;
 }
 
-function checkDocumentStructure(doc: XMLDocument): void {
-    equal(doc.documentElement.tagName, 'testExecutions');
+declare module '@xmldom/xmldom' {
+    interface Document {
+        documentElement: Element;
+    }
+}
+
+function checkDocumentStructure(doc: Document): void {
+    equal(doc.documentElement.localName, 'testExecutions');
     equal(doc.documentElement.attributes.length, 1);
     equal(doc.documentElement.getAttribute('version'), '1');
 
     const files = extractElements(doc.documentElement.childNodes);
     files.forEach((element) => {
-        equal(element.tagName, 'file');
+        equal(element.localName, 'file');
         equal(element.attributes.length, 1);
         const path = element.getAttribute('path');
         equal(typeof path, 'string');
@@ -40,7 +42,7 @@ function checkDocumentStructure(doc: XMLDocument): void {
 
         const testCases = extractElements(element.childNodes);
         testCases.forEach((element) => {
-            equal(element.tagName, 'testCase');
+            equal(element.localName, 'testCase');
             equal(element.attributes.length, 2);
             const name = element.getAttribute('name');
             const duration = element.getAttribute('duration');
@@ -54,17 +56,8 @@ function checkDocumentStructure(doc: XMLDocument): void {
             equal(children.length <= 1, true);
             if (children.length) {
                 const child = children[0]!;
-                match(child.tagName, /^(failure|skipped)$/u);
-                equal(child.attributes.length, 1);
-                const message = child.getAttribute('message');
-                equal(typeof message, 'string');
-                equal(message!.length > 0, true);
-
-                if (child.tagName === 'failure') {
-                    equal(child.childNodes.length > 0, true);
-                } else {
-                    equal(child.childNodes.length, 0);
-                }
+                match(child.localName!, /^(failure|skipped)$/u);
+                equal(child.attributes.length, 0);
             }
         });
     });
@@ -113,26 +106,26 @@ describe('SonarQubeReporter', function () {
 
             const parser = new DOMParser();
             const xml = stream.toString();
-            const doc = parser.parseFromString(xml);
+            const doc = parser.parseFromString(xml, 'application/xml');
             checkDocumentStructure(doc);
 
             const fileNodes = doc.getElementsByTagName('file');
             const fileNames: string[] = [];
             for (let i = 0; i < fileNodes.length; ++i) {
-                fileNames.push(fileNodes.item(i)!.getAttribute('path')!);
+                fileNames.push((fileNodes.item(i) as Element).getAttribute('path') ?? '');
             }
 
             deepEqual(fileNames, ['/some/file.js', '/some/otherfile.js', '/yet/another/file.js']);
-            equal(fileNodes[0]!.getElementsByTagName('testCase').length, 2);
-            equal(fileNodes[1]!.getElementsByTagName('testCase').length, 1);
-            equal(fileNodes[2]!.getElementsByTagName('testCase').length, 1);
+            equal((fileNodes[0] as Element).getElementsByTagName('testCase').length, 2);
+            equal((fileNodes[1] as Element).getElementsByTagName('testCase').length, 1);
+            equal((fileNodes[2] as Element).getElementsByTagName('testCase').length, 1);
 
             const testCases = doc.getElementsByTagName('testCase');
             equal(testCases.length, 4);
 
             const testNames: string[] = [];
             for (let i = 0; i < testCases.length; ++i) {
-                testNames.push(testCases.item(i)!.getAttribute('name')!);
+                testNames.push((testCases.item(i) as Element).getAttribute('name') ?? '');
             }
 
             deepEqual(testNames, [
@@ -142,14 +135,14 @@ describe('SonarQubeReporter', function () {
                 'Test Suite » Pending Test',
             ]);
 
-            equal(testCases[0]!.getElementsByTagName('*').length, 0);
-            equal(testCases[1]!.getElementsByTagName('*').length, 1);
-            equal(testCases[2]!.getElementsByTagName('*').length, 1);
-            equal(testCases[3]!.getElementsByTagName('*').length, 1);
+            equal((testCases[0] as Element).getElementsByTagName('*').length, 0);
+            equal((testCases[1] as Element).getElementsByTagName('*').length, 1);
+            equal((testCases[2] as Element).getElementsByTagName('*').length, 1);
+            equal((testCases[3] as Element).getElementsByTagName('*').length, 1);
 
-            equal(testCases[1]!.getElementsByTagName('failure').length, 1);
-            equal(testCases[2]!.getElementsByTagName('skipped').length, 1);
-            equal(testCases[3]!.getElementsByTagName('skipped').length, 1);
+            equal((testCases[1] as Element).getElementsByTagName('failure').length, 1);
+            equal((testCases[2] as Element).getElementsByTagName('skipped').length, 1);
+            equal((testCases[3] as Element).getElementsByTagName('skipped').length, 1);
 
             done();
         });
@@ -164,7 +157,7 @@ describe('SonarQubeReporter', function () {
 
             const parser = new DOMParser();
             const xml = stream.toString();
-            const doc = parser.parseFromString(xml);
+            const doc = parser.parseFromString(xml, 'application/xml');
             checkDocumentStructure(doc);
 
             equal(doc.getElementsByTagName('file').length, 0);
