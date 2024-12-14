@@ -27,7 +27,7 @@
   "license": "MIT",
   "devDependencies": {
     "@myrotvorets/buffer-stream": "^1.4.1",
-    "@myrotvorets/eslint-config-myrotvorets-ts": "^2.27.4",
+    "@myrotvorets/eslint-config-myrotvorets-ts": "^3.0.0",
     "@types/mocha": "^10.0.7",
     "@types/node": "^22.5.4",
     "@xmldom/xmldom": "^0.9.2",
