@@ -8,7 +8,7 @@ export default [
         ignores: ['**/*.js', '**/*.d.ts'],
     },
     ...MyrotvoretsConfig,
-    MochaPlugin.configs.flat.recommended,
+    MochaPlugin.configs.recommended,
     {
         languageOptions: {
             globals: {
