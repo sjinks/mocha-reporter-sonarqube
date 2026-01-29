@@ -2,7 +2,7 @@
 	"name": "mocha-reporter-sonarqube",
 	"image": "mcr.microsoft.com/devcontainers/typescript-node:4-22-bookworm@sha256:9add39631671c93a836f678b6c11d5ba759b21204f8604619ed1674b5f874f70",
 	"features": {
-		"ghcr.io/devcontainers/features/github-cli:1": {}
+		"ghcr.io/devcontainers/features/github-cli:1@sha256:d22f50b70ed75339b4eed1ba9ecde3a1791f90e88d37936517e3bace0bbad671": {}
 	},
 	"postCreateCommand": "npm install",
 	"customizations": {
