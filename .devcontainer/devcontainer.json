@@ -1,6 +1,6 @@
 {
 	"name": "mocha-reporter-sonarqube",
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:4-22-bookworm@sha256:7653612ebf9384fa1cbd32413d8f4fbf7daaf24e39e8664d9fc030de8c0c0af2",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:5-22-bookworm@sha256:7dd2504a6a3c37d493a05f89b0b9e3bcae0456e5aef1c489a83835b116f93b1c",
 	"features": {
 		"ghcr.io/devcontainers/features/github-cli:1": {}
 	},
